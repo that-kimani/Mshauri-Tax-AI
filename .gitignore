@@ -1,0 +1,19 @@
+# Local data / design assets — not source, not secret, just bulky
+Knowledge_Base/
+UI_Work/
+Postgres/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editor cruft
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.#*

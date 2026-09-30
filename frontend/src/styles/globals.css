@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   The single source of truth for the Mshauri visual system.
+   Tailwind consumes the hex values in tailwind.config.js; these custom
+   properties exist for the raw-CSS glass utilities and motion curves.
+--------------------------------------------------------------------------- */
+:root {
+  --mshauri-background: #06090f;
+  --mshauri-mountain-shadow: #0a0f1a;
+  --mshauri-surface: #0f172a;
+  --mshauri-surface-elevated: #141f36;
+
+  --mshauri-border-subtle: rgba(255, 255, 255, 0.06);
+  --mshauri-border-medium: rgba(255, 255, 255, 0.1);
+  --mshauri-border-active: rgba(255, 255, 255, 0.35);
+
+  --mshauri-accent: #e2e8f0;
+  --mshauri-accent-hover: #f8fafc;
+  --mshauri-warning: #f59e0b;
+
+  --mshauri-text-primary: #f8fafc;
+  --mshauri-text-secondary: #cbd5e1;
+  --mshauri-text-muted: #94a3b8;
+  --mshauri-text-disabled: #475569;
+
+  --mshauri-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-base font-sans text-ink-primary antialiased;
+    overscroll-behavior: none;
+  }
+
+  ::selection {
+    background: rgba(226, 232, 240, 0.24);
+    color: #f8fafc;
+  }
+
+  /* A single, restrained focus treatment across the whole product. */
+  :focus-visible {
+    outline: 2px solid rgba(248, 250, 252, 0.8);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Discreet scrollbars — the conversation should not feel like a code editor. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.2);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.34);
+  }
+}
+
+@layer components {
+  /* -----------------------------------------------------------------------
+     Atmosphere — the mountain is the primary visual element.
+     Two gradients only: one protects the bottom edge where the composer
+     floats, one keeps the top-left (sidebar) readable. Everything else
+     lets the image through.
+
+     Place the image at `public/background-mountain.png`. Until then the
+     solid mountain-shadow colour stands in, so the UI never renders broken.
+  ----------------------------------------------------------------------- */
+  .mshauri-atmosphere {
+    position: fixed;
+    inset: 0;
+    background-image: url('/background-mountain.png');
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    background-color: var(--mshauri-mountain-shadow);
+    z-index: 0;
+  }
+
+  .mshauri-atmosphere::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(6, 9, 15, 0.62) 0%,
+        rgba(6, 9, 15, 0.2) 28%,
+        rgba(6, 9, 15, 0.12) 55%,
+        rgba(6, 9, 15, 0.66) 100%
+      ),
+      radial-gradient(
+        120% 90% at 12% 10%,
+        rgba(6, 9, 15, 0.55) 0%,
+        rgba(6, 9, 15, 0) 58%
+      );
+  }
+
+  /* -----------------------------------------------------------------------
+     Glass system
+     Obsidian, not cyan. Used only where the spec permits it.
+  ----------------------------------------------------------------------- */
+  .glass-shell {
+    background: rgba(10, 15, 26, 0.6);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-sidebar {
+    background: rgba(6, 10, 18, 0.45);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+  }
+
+  .glass-composer {
+    background: rgba(18, 26, 41, 0.75);
+    backdrop-filter: blur(28px) saturate(135%);
+    -webkit-backdrop-filter: blur(28px) saturate(135%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-float {
+    background: rgba(12, 18, 30, 0.9);
+    backdrop-filter: blur(28px) saturate(130%);
+    -webkit-backdrop-filter: blur(28px) saturate(130%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Conversation content stays calm and highly readable. */
+  .glass-message {
+    background: rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-user-message {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Numeric-heavy content is scannable and monospaced. */
+  .tabular {
+    font-family: theme('fontFamily.mono');
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
