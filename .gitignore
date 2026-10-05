@@ -3,6 +3,7 @@ Knowledge_Base/
 UI_Work/
 Postgres/
 n8n-volume-backup.tar.gz
+knowledge_base.dump
 
 # OS files
 .DS_Store

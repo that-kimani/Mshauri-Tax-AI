@@ -164,11 +164,11 @@ export default function Sidebar({
             aria-hidden="true"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[11px] font-semibold text-ink-secondary"
           >
-            AM
+            GU
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13px] font-medium text-ink-secondary">
-              Amani Mwangi
+              Guest User
             </span>
             <span className="block truncate text-[11px] text-ink-disabled">
               Prototype session

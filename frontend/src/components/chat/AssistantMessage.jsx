@@ -4,6 +4,7 @@ import TaxTable from './TaxTable'
 import Citation from './Citation'
 import { IconButton } from '../ui/primitives'
 import { blocksToPlainText } from '../../lib/blocksToPlainText'
+import { renderRichText } from '../../lib/richText'
 
 /**
  * Renders one block of the assistant's structured response.
@@ -16,12 +17,16 @@ function Block({ block }) {
     case 'heading':
       return (
         <h3 className="pt-1 text-[15px] font-semibold leading-snug text-ink-primary">
-          {block.text}
+          {renderRichText(block.text)}
         </h3>
       )
 
     case 'paragraph':
-      return <p className="text-[14px] leading-[1.7] text-ink-secondary">{block.text}</p>
+      return (
+        <p className="text-[14px] leading-[1.7] text-ink-secondary">
+          {renderRichText(block.text)}
+        </p>
+      )
 
     case 'list': {
       const Tag = block.ordered ? 'ol' : 'ul'
@@ -35,7 +40,7 @@ function Block({ block }) {
         >
           {block.items.map((item, index) => (
             <li key={index} className="pl-0.5">
-              {item}
+              {renderRichText(item)}
             </li>
           ))}
         </Tag>
@@ -68,10 +73,12 @@ function Block({ block }) {
                 isWarning ? 'text-warn' : 'text-accent-hover',
               ].join(' ')}
             >
-              {block.title}
+              {renderRichText(block.title)}
             </p>
           )}
-          <p className="text-[13.5px] leading-[1.65] text-ink-secondary">{block.text}</p>
+          <p className="text-[13.5px] leading-[1.65] text-ink-secondary">
+            {renderRichText(block.text)}
+          </p>
         </aside>
       )
     }
@@ -102,9 +109,6 @@ export default function AssistantMessage({ message, isLast, onRegenerate }) {
     <article className="group animate-rise" aria-label="Mshauri response">
       <div className="mb-2 flex items-center gap-2">
         <span className="text-[13px] font-medium text-ink-muted">Mshauri</span>
-        {message.demo && (
-          <span className="text-[11px] font-medium text-warn">Demonstration data</span>
-        )}
       </div>
 
       <div className="glass-message space-y-4 rounded-card px-4 py-4 sm:px-5 sm:py-5">
@@ -133,9 +137,13 @@ export default function AssistantMessage({ message, isLast, onRegenerate }) {
           size="sm"
           aria-pressed={feedback === 'up'}
           onClick={() => setFeedback((v) => (v === 'up' ? null : 'up'))}
-          className={feedback === 'up' ? 'text-accent' : ''}
+          className={feedback === 'up' ? 'bg-white/[0.08] text-ink-primary' : ''}
         >
-          <ThumbsUp className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <ThumbsUp
+            className="h-3.5 w-3.5"
+            strokeWidth={1.75}
+            fill={feedback === 'up' ? 'currentColor' : 'none'}
+          />
         </IconButton>
 
         <IconButton
@@ -143,9 +151,13 @@ export default function AssistantMessage({ message, isLast, onRegenerate }) {
           size="sm"
           aria-pressed={feedback === 'down'}
           onClick={() => setFeedback((v) => (v === 'down' ? null : 'down'))}
-          className={feedback === 'down' ? 'text-warn' : ''}
+          className={feedback === 'down' ? 'bg-white/[0.08] text-ink-primary' : ''}
         >
-          <ThumbsDown className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <ThumbsDown
+            className="h-3.5 w-3.5"
+            strokeWidth={1.75}
+            fill={feedback === 'down' ? 'currentColor' : 'none'}
+          />
         </IconButton>
       </div>
     </article>

@@ -6,6 +6,8 @@
  *  - numeric columns are monospaced and right-aligned for scanning
  *  - horizontal scroll on narrow viewports instead of crushing columns
  */
+import { renderRichText } from '../../lib/richText'
+
 export default function TaxTable({ columns, rows, align = [], caption }) {
   return (
     <figure className="my-1">
@@ -27,7 +29,7 @@ export default function TaxTable({ columns, rows, align = [], caption }) {
                     align[index] === 'num' ? 'text-right' : 'text-left',
                   ].join(' ')}
                 >
-                  {column}
+                  {renderRichText(column)}
                 </th>
               ))}
             </tr>
@@ -53,7 +55,7 @@ export default function TaxTable({ columns, rows, align = [], caption }) {
                           : '',
                       ].join(' ')}
                     >
-                      {cell}
+                      {renderRichText(cell)}
                     </td>
                   )
                 })}

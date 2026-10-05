@@ -22,7 +22,6 @@ function buildDemoReply(question) {
     id: `m-${Date.now()}`,
     role: 'assistant',
     createdAt: new Date().toISOString(),
-    demo: true,
     blocks: [
       {
         type: 'callout',

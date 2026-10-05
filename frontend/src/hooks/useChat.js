@@ -1,6 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MOCK_CONVERSATIONS, DEMO_CONVERSATION_ID } from '../data/mockConversations'
+import { MOCK_CONVERSATIONS, INITIAL_CONVERSATION_ID } from '../data/mockConversations'
 import { sendMessage as mockSend } from '../lib/mockService'
+import { sendMessage as n8nSend, isN8nConfigured } from '../lib/n8nClient'
+import { blocksToPlainText } from '../lib/blocksToPlainText'
+
+/**
+ * Flattens stored messages to the lightweight `{ role, text }` history
+ * the backend expects. Assistant blocks are flattened to plain text so
+ * n8n never needs to understand the renderer's Block union.
+ */
+function toHistory(messages) {
+  return messages
+    .map((m) => {
+      if (m.role === 'user') return { role: 'user', text: m.text ?? '' }
+      if (m.role === 'assistant') {
+        return { role: 'assistant', text: blocksToPlainText(m.blocks ?? []) }
+      }
+      return null
+    })
+    .filter((entry) => entry && entry.text.trim().length > 0)
+}
 
 /**
  * Owns all conversation state.
@@ -11,7 +30,7 @@ import { sendMessage as mockSend } from '../lib/mockService'
  */
 export function useChat() {
   const [conversations, setConversations] = useState(MOCK_CONVERSATIONS)
-  const [activeId, setActiveId] = useState(DEMO_CONVERSATION_ID)
+  const [activeId, setActiveId] = useState(INITIAL_CONVERSATION_ID)
   const [status, setStatus] = useState('idle') // 'idle' | 'sending' | 'error'
   const [error, setError] = useState(null)
 
@@ -64,13 +83,22 @@ export function useChat() {
   }, [activeId, updateConversation])
 
   const runAssistantTurn = useCallback(
-    async (conversationId, promptText, attachments) => {
+    async (conversationId, promptText, attachments, history = []) => {
       const requestId = ++requestRef.current
       setStatus('sending')
       setError(null)
 
       try {
-        const reply = await mockSend({ text: promptText, attachments })
+        // Live backend when configured, mock demo replies otherwise.
+        // Both resolve to the same assistant-message shape.
+        const reply = isN8nConfigured()
+          ? await n8nSend({
+              text: promptText,
+              attachments,
+              conversationId,
+              history,
+            })
+          : await mockSend({ text: promptText, attachments })
         if (requestRef.current !== requestId) return
         updateConversation(conversationId, (conversation) => ({
           ...conversation,
@@ -100,16 +128,19 @@ export function useChat() {
         attachments: attachments.map(({ name, size }) => ({ name, size })),
       }
 
-      updateConversation(activeId, (conversation) => ({
-        ...conversation,
-        title: conversation.messages.length === 0 ? trimmed.slice(0, 48) : conversation.title,
-        messages: [...conversation.messages, userMessage],
+      const conversation = conversations.find((c) => c.id === activeId)
+      const history = toHistory(conversation?.messages ?? []).slice(-10)
+
+      updateConversation(activeId, (conv) => ({
+        ...conv,
+        title: conv.messages.length === 0 ? trimmed.slice(0, 48) : conv.title,
+        messages: [...conv.messages, userMessage],
         updatedAt: new Date().toISOString(),
       }))
 
-      runAssistantTurn(activeId, trimmed, attachments)
+      runAssistantTurn(activeId, trimmed, attachments, history)
     },
-    [activeId, status, updateConversation, runAssistantTurn],
+    [activeId, status, conversations, updateConversation, runAssistantTurn],
   )
 
   const regenerate = useCallback(() => {
@@ -125,9 +156,10 @@ export function useChat() {
 
     const promptText = conversation.messages[lastUserIndex].text
     const trimmedMessages = conversation.messages.slice(0, lastUserIndex + 1)
+    const history = toHistory(conversation.messages.slice(0, lastUserIndex)).slice(-10)
 
     updateConversation(activeId, (c) => ({ ...c, messages: trimmedMessages }))
-    runAssistantTurn(activeId, promptText, [])
+    runAssistantTurn(activeId, promptText, [], history)
   }, [activeId, status, conversations, updateConversation, runAssistantTurn])
 
   const retry = useCallback(() => {
@@ -137,7 +169,9 @@ export function useChat() {
 
     const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
     if (!lastUser) return
-    runAssistantTurn(activeId, lastUser.text, lastUser.attachments ?? [])
+    const lastUserIndex = conversation.messages.lastIndexOf(lastUser)
+    const history = toHistory(conversation.messages.slice(0, lastUserIndex)).slice(-10)
+    runAssistantTurn(activeId, lastUser.text, lastUser.attachments ?? [], history)
   }, [activeId, conversations, runAssistantTurn])
 
   // Abandon in-flight responses when the user navigates away.
